@@ -7,6 +7,12 @@ const kortTyper = {
   truck: 'truck.svg',
 };
 
+const totalCards = Object.keys(kortTyper).length * 2;
+let flippedCardsCount = 0;
+
+let guessCount = 0;
+let highscore = localStorage.getItem('highscore') || Infinity;
+
 function randomiserArray(array) {
   const kopiertArray = [...array];
   for (let i = kopiertArray.length - 1; i > 0; i--) {
@@ -63,15 +69,19 @@ function genererKort() {
       if (!valgtKort1) {
         console.log('valgt kort type', type);
         valgtKort1 = { id: kortElement.id, type }; // Lagrer referansen til det første kortet som blir valgt
+        updateGuessCount();
         console.log('Valgt kort 1:', valgtKort1);
       } else if (!valgtKort2 || valgtKort2.type !== type) {
         valgtKort2 = { id: kortElement.id, type }; // Lagrer referansen til det andre kortet som blir valgt
+        updateGuessCount();
         console.log('Valgt kort 2:', valgtKort2);
         if (
           valgtKort1.type === valgtKort2.type &&
           valgtKort1.id !== valgtKort2.id
         ) {
           console.log('Samme kort');
+          flippedCardsCount += 2;
+          updateHighscoreIfGameWon();
           valgtKort1 = null;
           valgtKort2 = null;
         } else {
@@ -88,6 +98,40 @@ function genererKort() {
     });
   });
 }
+
+function checkGameWon() {
+  return flippedCardsCount === totalCards;
+}
+
+function updateGuessCount() {
+  guessCount++;
+  document.getElementById('guessCount').textContent = `Guesses: ${guessCount}`;
+}
+
+function updateHighscoreIfGameWon() {
+  if (checkGameWon() && guessCount < highscore) {
+    console.log('New highscore!');
+    highscore = guessCount;
+    localStorage.setItem('highscore', highscore); // Save new highscore to localStorage
+    document.getElementById(
+      'highscore'
+    ).textContent = `Highscore: ${highscore}`;
+  }
+}
+
+function resetGame() {
+  guessCount = 0;
+  document.getElementById('guessCount').textContent = `Guesses: ${guessCount}`;
+  genererKort();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  document.getElementById('startKnapp').addEventListener('click', resetGame);
+  document.getElementById('guessCount').textContent = `Guesses: ${guessCount}`;
+  document.getElementById('highscore').textContent = `Highscore: ${
+    highscore === Infinity ? 0 : highscore
+  }`;
+});
 
 document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('startKnapp').addEventListener('click', () => {
