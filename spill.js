@@ -87,6 +87,9 @@ function genererKort(numberOfCards = totalCards) {
           flippedCardsCount += 2;
           console.log('Flipped cards count:', flippedCardsCount);
           console.log('numberOfCards:', numberOfCards);
+
+          document.getElementById(valgtKort1.id).classList.add('matched');
+          document.getElementById(valgtKort2.id).classList.add('matched');
           if (checkGameWon(numberOfCards)) {
             console.log('Game won!');
             updateHighscoreIfGameWon(guessCount, numberOfCards);

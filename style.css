@@ -56,3 +56,7 @@
   width: 80%;
   margin: 10px;
 }
+
+.kort.matched {
+  pointer-events: none;
+}
