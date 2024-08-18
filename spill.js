@@ -5,6 +5,8 @@ const kortTyper = {
   umbrella: 'umbrella.svg',
   racket: 'racket.svg',
   truck: 'truck.svg',
+  trumpet: 'trumpet.svg',
+  telescope: 'telescope.svg',
 };
 
 const totalCards = Object.keys(kortTyper).length * 2;
