@@ -51,3 +51,8 @@
   position: relative;
   gap: 10px;
 }
+
+#cardSelector {
+  width: 80%;
+  margin: 10px;
+}

@@ -25,14 +25,19 @@ function randomiserArray(array) {
 let valgtKort1 = null;
 let valgtKort2 = null;
 
-function genererKort() {
+function genererKort(numberOfCards = totalCards) {
   let spillområde = document.getElementById('spillområde');
   spillområde.innerHTML = '';
 
-  // Generer en liste over korttyper
-  const kortListe = Object.keys(kortTyper).flatMap((kortType) => [
+  numberOfCards = numberOfCards - (numberOfCards % 2);
+
+  document.getElementById('cardCount').textContent = `${numberOfCards}`;
+
+  const selectedTypes = Object.keys(kortTyper).slice(0, numberOfCards / 2);
+
+  const kortListe = selectedTypes.flatMap((kortType) => [
     { type: kortType, src: kortTyper[kortType], alt: kortType },
-    { type: kortType, src: kortTyper[kortType], alt: kortType }, // en ekstra for å lage par
+    { type: kortType, src: kortTyper[kortType], alt: kortType },
   ]);
 
   // Randomiser listen
@@ -68,11 +73,11 @@ function genererKort() {
     kortElement.addEventListener('click', () => {
       if (!valgtKort1) {
         console.log('valgt kort type', type);
-        valgtKort1 = { id: kortElement.id, type }; // Lagrer referansen til det første kortet som blir valgt
+        valgtKort1 = { id: kortElement.id, type };
         updateGuessCount();
         console.log('Valgt kort 1:', valgtKort1);
       } else if (!valgtKort2 || valgtKort2.type !== type) {
-        valgtKort2 = { id: kortElement.id, type }; // Lagrer referansen til det andre kortet som blir valgt
+        valgtKort2 = { id: kortElement.id, type };
         updateGuessCount();
         console.log('Valgt kort 2:', valgtKort2);
         if (
@@ -137,4 +142,14 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('startKnapp').addEventListener('click', () => {
     genererKort();
   });
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+  const cardSelector = document.getElementById('cardSelector');
+  cardSelector.addEventListener('input', () => {
+    const selectedNumberOfCards = parseInt(cardSelector.value, 10);
+    genererKort(selectedNumberOfCards);
+  });
+
+  genererKort(parseInt(cardSelector.value, 10));
 });
