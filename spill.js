@@ -1,4 +1,4 @@
-const kortTyper = {
+const cardTypes = {
   car: 'car.svg',
   dog: 'dog.svg',
   cat: 'cat.svg',
@@ -9,103 +9,96 @@ const kortTyper = {
   telescope: 'telescope.svg',
 };
 
-const totalCards = Object.keys(kortTyper).length * 2;
+const totalCards = Object.keys(cardTypes).length * 2;
 let flippedCardsCount = 0;
 
 let guessCount = 0;
 let highscore = localStorage.getItem('highscore') || undefined;
 
-function randomiserArray(array) {
-  const kopiertArray = [...array];
-  for (let i = kopiertArray.length - 1; i > 0; i--) {
+function randomizeArray(array) {
+  const copiedArray = [...array];
+  for (let i = copiedArray.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [kopiertArray[i], kopiertArray[j]] = [kopiertArray[j], kopiertArray[i]];
+    [copiedArray[i], copiedArray[j]] = [copiedArray[j], copiedArray[i]];
   }
-  return kopiertArray;
+  return copiedArray;
 }
 
-let valgtKort1 = null;
-let valgtKort2 = null;
+let card1 = null;
+let card2 = null;
 
-function genererKort(numberOfCards = totalCards) {
+function generateCards(numberOfCards = totalCards) {
   flippedCardsCount = 0;
-  let spillområde = document.getElementById('spillområde');
-  spillområde.innerHTML = '';
+  let playingArea = document.getElementById('playingArea');
+  playingArea.innerHTML = '';
 
   numberOfCards = numberOfCards - (numberOfCards % 2);
 
   document.getElementById('cardCount').textContent = `${numberOfCards}`;
 
-  const selectedTypes = Object.keys(kortTyper).slice(0, numberOfCards / 2);
+  const selectedTypes = Object.keys(cardTypes).slice(0, numberOfCards / 2);
 
-  const kortListe = selectedTypes.flatMap((kortType) => [
-    { type: kortType, src: kortTyper[kortType], alt: kortType },
-    { type: kortType, src: kortTyper[kortType], alt: kortType },
+  const cardList = selectedTypes.flatMap((cardType) => [
+    { type: cardType, src: cardTypes[cardType], alt: cardType },
+    { type: cardType, src: cardTypes[cardType], alt: cardType },
   ]);
 
   // Randomiser listen
-  const randomisertKortListe = randomiserArray(kortListe);
+  const randomizedCardList = randomizeArray(cardList);
 
-  randomisertKortListe.forEach(({ type, src, alt }) => {
-    let kortElement = document.createElement('div');
-    kortElement.id = `${type}-${Math.random().toString(36).substr(2, 9)}`;
-    kortElement.classList.add('kort', 'snu');
+  randomizedCardList.forEach(({ type, src, alt }) => {
+    let cardElement = document.createElement('div');
+    cardElement.id = `${type}-${Math.random().toString(36).substr(2, 9)}`;
+    cardElement.classList.add('card', 'turn');
 
-    let kortInner = document.createElement('div');
-    kortInner.classList.add('kort-inner');
+    let cardInner = document.createElement('div');
+    cardInner.classList.add('card-inner');
 
-    let bildeElement = document.createElement('img');
-    bildeElement.classList.add('kort-front');
-    bildeElement.src = `/SVG/${src}`;
-    bildeElement.alt = alt;
+    let picElement = document.createElement('img');
+    picElement.classList.add('card-front');
+    picElement.src = `/SVG/${src}`;
+    picElement.alt = alt;
 
-    let bildeElementBak = document.createElement('img');
-    bildeElementBak.classList.add('kort-back');
-    bildeElementBak.src = '/SVG/backside.svg'; // Standardbaksidebildet for alle kort
-    bildeElementBak.alt = 'back'; // skjermleserstøtte
+    let picElementBack = document.createElement('img');
+    picElementBack.classList.add('card-back');
+    picElementBack.src = '/SVG/backside.svg'; // Standardbaksidebildet for alle kort
+    picElementBack.alt = 'back'; // skjermleserstøtte
 
-    kortInner.appendChild(bildeElement);
-    kortInner.appendChild(bildeElementBak);
+    cardInner.appendChild(picElement);
+    cardInner.appendChild(picElementBack);
 
-    kortElement.appendChild(kortInner);
-    spillområde.appendChild(kortElement);
+    cardElement.appendChild(cardInner);
+    playingArea.appendChild(cardElement);
 
-    kortElement.addEventListener('click', () => {
-      kortElement.classList.toggle('snu'); // Vender kortet
+    cardElement.addEventListener('click', () => {
+      cardElement.classList.toggle('turn'); // Vender kortet
     });
-    kortElement.addEventListener('click', () => {
-      if (!valgtKort1) {
-        console.log('valgt kort type', type);
-        valgtKort1 = { id: kortElement.id, type };
+    cardElement.addEventListener('click', () => {
+      if (!card1) {
+        card1 = { id: cardElement.id, type };
         updateGuessCount();
-      } else if (!valgtKort2 || valgtKort2.type !== type) {
-        valgtKort2 = { id: kortElement.id, type };
+      } else if (!card2 || card2.type !== type) {
+        card2 = { id: cardElement.id, type };
         updateGuessCount();
-        if (
-          valgtKort1.type === valgtKort2.type &&
-          valgtKort1.id !== valgtKort2.id
-        ) {
+        if (card1.type === card2.type && card1.id !== card2.id) {
           console.log('Samme kort');
           flippedCardsCount += 2;
-          console.log('Flipped cards count:', flippedCardsCount);
-          console.log('numberOfCards:', numberOfCards);
-
-          document.getElementById(valgtKort1.id).classList.add('matched');
-          document.getElementById(valgtKort2.id).classList.add('matched');
+          document.getElementById(card1.id).classList.add('matched');
+          document.getElementById(card2.id).classList.add('matched');
           if (checkGameWon(numberOfCards)) {
             console.log('Game won!');
             updateHighscoreIfGameWon(guessCount, numberOfCards);
           }
-          valgtKort1 = null;
-          valgtKort2 = null;
+          card1 = null;
+          card2 = null;
         } else {
           console.log('Ikke samme kort');
           // Kortene matcher ikke, vender begge kortene tilbake
           setTimeout(() => {
-            document.querySelector(`#${valgtKort1.id}`).classList.add('snu');
-            document.querySelector(`#${valgtKort2.id}`).classList.add('snu');
-            valgtKort1 = null;
-            valgtKort2 = null;
+            document.querySelector(`#${card1.id}`).classList.add('turn');
+            document.querySelector(`#${card2.id}`).classList.add('turn');
+            card1 = null;
+            card2 = null;
           }, 1000);
         }
       }
@@ -119,7 +112,7 @@ function checkGameWon(numCardsPlayed) {
 
 function updateGuessCount() {
   guessCount++;
-  document.getElementById('guessCount').textContent = `Guesses: ${guessCount}`;
+  document.getElementById('guessCount').textContent = `Forsøk: ${guessCount}`;
 }
 
 function updateHighscoreIfGameWon(guessCount, numCardsPlayed) {
@@ -137,13 +130,13 @@ function updateHighscoreIfGameWon(guessCount, numCardsPlayed) {
 
 function resetGame() {
   guessCount = 0;
-  document.getElementById('guessCount').textContent = `Guesses: ${guessCount}`;
+  document.getElementById('guessCount').textContent = `Forsøk: ${guessCount}`;
   const selectedNumberOfCards = parseInt(
     document.getElementById('cardSelector').value,
     10
   );
   updateHighscoreDisplay(selectedNumberOfCards);
-  genererKort(selectedNumberOfCards);
+  generateCards(selectedNumberOfCards);
 }
 
 function updateHighscoreDisplay(numberOfCards) {
@@ -163,22 +156,20 @@ function updateHighscoreDisplay(numberOfCards) {
 
 document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('startKnapp').addEventListener('click', resetGame);
-  document.getElementById('guessCount').textContent = `Guesses: ${guessCount}`;
+  document.getElementById('guessCount').textContent = `Forsøk: ${guessCount}`;
 });
 
 document.addEventListener('DOMContentLoaded', function () {
   const cardSelector = document.getElementById('cardSelector');
   cardSelector.addEventListener('input', () => {
     guessCount = 0;
-    document.getElementById(
-      'guessCount'
-    ).textContent = `Guesses: ${guessCount}`;
+    document.getElementById('guessCount').textContent = `Forsøk: ${guessCount}`;
     const selectedNumberOfCards = parseInt(cardSelector.value, 10);
     updateHighscoreDisplay(selectedNumberOfCards);
-    genererKort(selectedNumberOfCards);
+    generateCards(selectedNumberOfCards);
   });
 
   const initialNumberOfCards = parseInt(cardSelector.value, 10);
   updateHighscoreDisplay(initialNumberOfCards);
-  genererKort(initialNumberOfCards);
+  generateCards(initialNumberOfCards);
 });
