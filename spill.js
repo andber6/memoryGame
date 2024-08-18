@@ -11,7 +11,7 @@ const totalCards = Object.keys(kortTyper).length * 2;
 let flippedCardsCount = 0;
 
 let guessCount = 0;
-let highscore = localStorage.getItem('highscore') || Infinity;
+let highscore = localStorage.getItem('highscore') || undefined;
 
 function randomiserArray(array) {
   const kopiertArray = [...array];
@@ -26,6 +26,7 @@ let valgtKort1 = null;
 let valgtKort2 = null;
 
 function genererKort(numberOfCards = totalCards) {
+  flippedCardsCount = 0;
   let spillområde = document.getElementById('spillområde');
   spillområde.innerHTML = '';
 
@@ -75,18 +76,21 @@ function genererKort(numberOfCards = totalCards) {
         console.log('valgt kort type', type);
         valgtKort1 = { id: kortElement.id, type };
         updateGuessCount();
-        console.log('Valgt kort 1:', valgtKort1);
       } else if (!valgtKort2 || valgtKort2.type !== type) {
         valgtKort2 = { id: kortElement.id, type };
         updateGuessCount();
-        console.log('Valgt kort 2:', valgtKort2);
         if (
           valgtKort1.type === valgtKort2.type &&
           valgtKort1.id !== valgtKort2.id
         ) {
           console.log('Samme kort');
           flippedCardsCount += 2;
-          updateHighscoreIfGameWon();
+          console.log('Flipped cards count:', flippedCardsCount);
+          console.log('numberOfCards:', numberOfCards);
+          if (checkGameWon(numberOfCards)) {
+            console.log('Game won!');
+            updateHighscoreIfGameWon(guessCount, numberOfCards);
+          }
           valgtKort1 = null;
           valgtKort2 = null;
         } else {
@@ -104,8 +108,8 @@ function genererKort(numberOfCards = totalCards) {
   });
 }
 
-function checkGameWon() {
-  return flippedCardsCount === totalCards;
+function checkGameWon(numCardsPlayed) {
+  return flippedCardsCount === numCardsPlayed;
 }
 
 function updateGuessCount() {
@@ -113,43 +117,63 @@ function updateGuessCount() {
   document.getElementById('guessCount').textContent = `Guesses: ${guessCount}`;
 }
 
-function updateHighscoreIfGameWon() {
-  if (checkGameWon() && guessCount < highscore) {
-    console.log('New highscore!');
-    highscore = guessCount;
-    localStorage.setItem('highscore', highscore); // Save new highscore to localStorage
+function updateHighscoreIfGameWon(guessCount, numCardsPlayed) {
+  const highscoreKey = `highscore-${numCardsPlayed}`;
+  let currentHighscore = localStorage.getItem(highscoreKey) || Infinity;
+  if (checkGameWon(numCardsPlayed) && guessCount < currentHighscore) {
+    console.log('New highscore! Guesses:', guessCount);
+    currentHighscore = guessCount;
+    localStorage.setItem(highscoreKey, guessCount); // Save new highscore to localStorage
     document.getElementById(
       'highscore'
-    ).textContent = `Highscore: ${highscore}`;
+    ).textContent = `Highscore: ${guessCount}`;
   }
 }
 
 function resetGame() {
   guessCount = 0;
   document.getElementById('guessCount').textContent = `Guesses: ${guessCount}`;
-  genererKort();
+  const selectedNumberOfCards = parseInt(
+    document.getElementById('cardSelector').value,
+    10
+  );
+  updateHighscoreDisplay(selectedNumberOfCards);
+  genererKort(selectedNumberOfCards);
+}
+
+function updateHighscoreDisplay(numberOfCards) {
+  const highscoreKey = `highscore-${numberOfCards}`;
+  let highscore = localStorage.getItem(highscoreKey);
+  console.log('highscoreKey: ', highscoreKey, ' and highscore: ', highscore);
+  console.log('highscore:', highscore);
+  if (highscore === null) {
+    // If no highscore exists for the selected number of cards
+    document.getElementById('highscore').textContent = '';
+  } else {
+    document.getElementById(
+      'highscore'
+    ).textContent = `Highscore: ${highscore}`;
+  }
 }
 
 document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('startKnapp').addEventListener('click', resetGame);
   document.getElementById('guessCount').textContent = `Guesses: ${guessCount}`;
-  document.getElementById('highscore').textContent = `Highscore: ${
-    highscore === Infinity ? 0 : highscore
-  }`;
-});
-
-document.addEventListener('DOMContentLoaded', function () {
-  document.getElementById('startKnapp').addEventListener('click', () => {
-    genererKort();
-  });
 });
 
 document.addEventListener('DOMContentLoaded', function () {
   const cardSelector = document.getElementById('cardSelector');
   cardSelector.addEventListener('input', () => {
+    guessCount = 0;
+    document.getElementById(
+      'guessCount'
+    ).textContent = `Guesses: ${guessCount}`;
     const selectedNumberOfCards = parseInt(cardSelector.value, 10);
+    updateHighscoreDisplay(selectedNumberOfCards);
     genererKort(selectedNumberOfCards);
   });
 
-  genererKort(parseInt(cardSelector.value, 10));
+  const initialNumberOfCards = parseInt(cardSelector.value, 10);
+  updateHighscoreDisplay(initialNumberOfCards);
+  genererKort(initialNumberOfCards);
 });
